@@ -9,8 +9,14 @@ public class Block {
 	private int activeState = 1;
 	private int health;
 	private int maxHealth;
+	private boolean falling = true;
 	private Vector2 pos;
 	private TextureRegion[] textureStates;
+	
+	static enum Types {
+		BRICK,
+		WEAPON
+	}
 	
 	public Block(TextureRegion[] textureStates, Vector2 pos) {
 		this.textureStates = textureStates;
@@ -30,13 +36,25 @@ public class Block {
 		return health;
 	}
 	
+	public Vector2 getPosition() {
+		return this.pos;
+	}
+	
 	public void incrementState() {
 		activeState++;
 	}
 	
+	public boolean isFalling() {
+		return falling;
+	}
+
 	public void render(SpriteBatch batch) {
-		int state = maxHealth % 4;
+		int state = maxHealth / 4;
 		batch.draw(textureStates[(activeState / state) - 1], pos.x, pos.y);
+	}
+
+	public void setFalling(boolean falling) {
+		this.falling = falling;
 	}
 
 	public void setHealth(int health) {
