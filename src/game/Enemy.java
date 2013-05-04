@@ -41,7 +41,7 @@ public class Enemy {
 		speed = 20;
 		moving = true;
 		attackSpot = new Vector2();
-		health = 2;
+		setHealth(2);
 	}
 	
 	public static void dispose() {
@@ -68,7 +68,7 @@ public class Enemy {
 		renderer.draw(batch, skeleton);
 	}
 	
-	public void update(Array<Block> blocks) {
+	public boolean update(Array<Block> blocks) {
 		state.update(Gdx.graphics.getDeltaTime());
 		skeleton.update(Gdx.graphics.getDeltaTime());
 		skeleton.updateWorldTransform();
@@ -81,6 +81,7 @@ public class Enemy {
 		
 		Iterator<Block> it = blocks.iterator();
 		boolean setX = false;
+		boolean noBlock = true;
 		while(it.hasNext()) {
 			Block b = it.next();
 			if(moving) {
@@ -95,6 +96,7 @@ public class Enemy {
 			}
 			else if(!moving && !b.isFalling() && state.isComplete() && b.getPosition().y == attackSpot.y && b.getPosition().x == attackSpot.x) {
 				state.setAnimation("Attack", false);
+				noBlock = false;
 				if(!b.takeDamage()) {
 					it.remove();
 					moving = true;
@@ -109,6 +111,21 @@ public class Enemy {
 			}
 			root.setX(x);
 		}
-		
+		else if(!moving && state.isComplete() && noBlock) {
+			moving = true;
+		}
+		return health <= 0;
+	}
+
+	public int getHealth() {
+		return health;
+	}
+
+	public void setHealth(int health) {
+		this.health = health;
+	}
+	
+	public void takeDamage() {
+		this.health--;
 	}
 }

@@ -25,6 +25,7 @@ import com.esotericsoftware.spine.SkeletonRenderer;
 
 public class PlayScreen implements Screen, InputProcessor {
 	
+	private TextureRegion arrow;
 	private TextureRegion backgroundDark;
 	private TextureRegion backgroundLight;
 	private TextureRegion backgroundTransition;
@@ -40,8 +41,12 @@ public class PlayScreen implements Screen, InputProcessor {
 	private ObjectMap<Integer, Block.Types> keyToType;
 	private TextureRegion[] groundTiles;
 	private Main main;
+	private boolean newRound;
 	private Vector3 mousePosition;
 	private SkeletonRenderer renderer;
+	private int spawnAmount = 10;
+	private float spawnTimer = 0;
+	
 	private Texture spriteSheet;
 	private TextureRegion[] weaponTextures;
 	
@@ -106,6 +111,8 @@ public class PlayScreen implements Screen, InputProcessor {
 		weaponTextures[1] = new TextureRegion(spriteSheet, 32, 32, 32, 32);
 		weaponTextures[2] = new TextureRegion(spriteSheet, 64, 32, 32, 32);
 		weaponTextures[3] = new TextureRegion(spriteSheet, 96, 32, 32, 32);
+		
+		arrow = new TextureRegion(spriteSheet, 32, 128, 32, 5);
 	}
 	
 	public boolean isSpotOccupied(Vector2 position) {
@@ -147,6 +154,11 @@ public class PlayScreen implements Screen, InputProcessor {
 	public boolean mouseMoved(int x, int y) {
 		camera.unproject(mousePosition.set(x, y, 0));
 		return false;
+	}
+	
+	public void newRound() {
+		newRound = true;
+		spawnTimer = 0;
 	}
 
 	@Override
@@ -257,7 +269,18 @@ public class PlayScreen implements Screen, InputProcessor {
 		blocks = new Array<Block>();
 		renderer = new SkeletonRenderer();
 		enemies = new Array<Enemy>();
-		enemies.add(Enemy.spawn());
+		newRound();
+	}
+	
+	public void spawnViaDelay() {
+		spawnTimer += Gdx.graphics.getDeltaTime();
+		if(spawnTimer > 0.5f) {
+			spawnTimer = 0;
+			enemies.add(Enemy.spawn());
+		}
+		if(enemies.size >= spawnAmount) {
+			newRound = false;
+		}
 	}
 
 	@Override
@@ -272,7 +295,7 @@ public class PlayScreen implements Screen, InputProcessor {
 				blocks.add(new Brick(blockTextures, position));
 				break;
 			case WEAPON:
-				blocks.add(new WeaponBlock(weaponTextures, position));
+				blocks.add(new WeaponBlock(weaponTextures, position, arrow));
 			default:
 				break;
 				
@@ -295,17 +318,32 @@ public class PlayScreen implements Screen, InputProcessor {
 	
 	public void update() {
 		camera.update();
-		
-		Iterator<Block> fallingBlocks = getFallingBlocks().iterator();
-		while(fallingBlocks.hasNext()) {
-			Block b = fallingBlocks.next();
-			b.update(blocks);
+		if(newRound) {
+			spawnViaDelay();
+		}
+		Iterator<Block> it = blocks.iterator();
+		while(it.hasNext()) {
+			Block b = it.next();
+			if(b instanceof WeaponBlock) {
+				WeaponBlock wb = (WeaponBlock) b;
+				wb.update(blocks, enemies);
+			}
+			else {
+				b.update(blocks);
+			}
+			
 		}
 		
 		Iterator<Enemy> itEnemies = enemies.iterator();
 		while(itEnemies.hasNext()) {
 			Enemy e = itEnemies.next();
-			e.update(blocks);
+			if(e.update(blocks)) {
+				itEnemies.remove();
+			}
+			if(enemies.size == 0) {
+				spawnAmount += 5;
+				newRound();
+			}
 		}
 	}
 
