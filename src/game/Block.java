@@ -10,9 +10,8 @@ import com.badlogic.gdx.utils.Array;
 
 public class Block {
 	
-	private int activeState = 1;
-	private int health;
-	private int maxHealth;
+	private float health;
+	private float maxHealth;
 	private boolean falling = true;
 	private int maxFallingSpeed = 400;
 	private Vector2 pos;
@@ -39,16 +38,12 @@ public class Block {
 		this.pos = pos;
 	}
 
-	public int getHealth() {
+	public float getHealth() {
 		return health;
 	}
 	
 	public Vector2 getPosition() {
 		return this.pos;
-	}
-	
-	public void incrementState() {
-		activeState++;
 	}
 	
 	public boolean isFalling() {
@@ -64,8 +59,18 @@ public class Block {
 	}
 
 	public void render(SpriteBatch batch) {
-		int state = maxHealth / 4;
-		batch.draw(textureStates[(activeState / state) - 1], pos.x, pos.y);
+		float percent = health / maxHealth;
+		int state = 0;
+		if(percent < 0.25) {
+			state = 3;
+		}
+		else if(percent < 0.5) {
+			state = 2;
+		}
+		else if(percent < 0.75) {
+			state = 1;
+		}
+		batch.draw(textureStates[state], pos.x, pos.y);
 	}
 
 	public void setFalling(boolean falling) {
@@ -74,6 +79,11 @@ public class Block {
 
 	public void setHealth(int health) {
 		this.health = health;
+	}
+	
+	public boolean takeDamage() {
+		this.health--;
+		return this.health > 0;
 	}
 	
 	public void update(Array<Block> blocks) {

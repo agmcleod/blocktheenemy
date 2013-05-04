@@ -1,0 +1,40 @@
+
+defendthewall.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+head
+  rotate: false
+  xy: 1, 2
+  size: 12, 12
+  orig: 12, 12
+  offset: 0, 0
+  index: -1
+mace
+  rotate: false
+  xy: 15, 2
+  size: 7, 12
+  orig: 7, 12
+  offset: 0, 0
+  index: -1
+leg
+  rotate: false
+  xy: 24, 1
+  size: 1, 13
+  orig: 1, 13
+  offset: 0, 0
+  index: -1
+body
+  rotate: false
+  xy: 27, 3
+  size: 1, 11
+  orig: 1, 11
+  offset: 0, 0
+  index: -1
+arm
+  rotate: false
+  xy: 30, 5
+  size: 1, 9
+  orig: 1, 9
+  offset: 0, 0
+  index: -1

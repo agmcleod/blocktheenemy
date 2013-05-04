@@ -21,6 +21,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
+import com.esotericsoftware.spine.SkeletonRenderer;
 
 public class PlayScreen implements Screen, InputProcessor {
 	
@@ -34,11 +35,13 @@ public class PlayScreen implements Screen, InputProcessor {
 	private Integer cursor;
 	private boolean drawBlock = false;
 	private Cursor emptyCursor;
+	private Array<Enemy> enemies;
 	private ObjectMap<Integer, TextureRegion> keyMappings;
 	private ObjectMap<Integer, Block.Types> keyToType;
 	private TextureRegion[] groundTiles;
 	private Main main;
 	private Vector3 mousePosition;
+	private SkeletonRenderer renderer;
 	private Texture spriteSheet;
 	private TextureRegion[] weaponTextures;
 	
@@ -68,6 +71,17 @@ public class PlayScreen implements Screen, InputProcessor {
 	@Override
 	public void hide() {
 		
+	}
+	
+	public void initKeyBindings() {
+		Gdx.input.setInputProcessor(this);
+		keyMappings = new ObjectMap<Integer, TextureRegion>();
+		keyMappings.put(Input.Keys.NUM_1, blockTextures[0]);
+		keyMappings.put(Input.Keys.NUM_2, weaponTextures[0]);
+		
+		keyToType = new ObjectMap<Integer, Block.Types>();
+		keyToType.put(Input.Keys.NUM_1, Block.Types.BRICK);
+		keyToType.put(Input.Keys.NUM_2, Block.Types.WEAPON);
 	}
 	
 	public void initTextures() {
@@ -160,6 +174,11 @@ public class PlayScreen implements Screen, InputProcessor {
 		catch(LWJGLException e) {
 			System.err.println(e.getMessage());
 		}
+		Iterator<Enemy> itEnemies = enemies.iterator();
+		while(itEnemies.hasNext()) {
+			Enemy e = itEnemies.next();
+			e.render(renderer, batch);
+		}
 		batch.end();
 	}
 
@@ -222,15 +241,7 @@ public class PlayScreen implements Screen, InputProcessor {
 	public void show() {
 		batch = new SpriteBatch();
 		initTextures();
-		
-		Gdx.input.setInputProcessor(this);
-		keyMappings = new ObjectMap<Integer, TextureRegion>();
-		keyMappings.put(Input.Keys.NUM_1, blockTextures[0]);
-		keyMappings.put(Input.Keys.NUM_2, weaponTextures[0]);
-		
-		keyToType = new ObjectMap<Integer, Block.Types>();
-		keyToType.put(Input.Keys.NUM_1, Block.Types.BRICK);
-		keyToType.put(Input.Keys.NUM_2, Block.Types.WEAPON);
+		initKeyBindings();
 		
 		int min = Cursor.getMinCursorSize();
 		IntBuffer tmp = BufferUtils.createIntBuffer(min * min);
@@ -244,6 +255,9 @@ public class PlayScreen implements Screen, InputProcessor {
 		mousePosition = new Vector3();
 		
 		blocks = new Array<Block>();
+		renderer = new SkeletonRenderer();
+		enemies = new Array<Enemy>();
+		enemies.add(Enemy.spawn());
 	}
 
 	@Override
@@ -257,6 +271,8 @@ public class PlayScreen implements Screen, InputProcessor {
 			case BRICK:
 				blocks.add(new Brick(blockTextures, position));
 				break;
+			case WEAPON:
+				blocks.add(new WeaponBlock(weaponTextures, position));
 			default:
 				break;
 				
@@ -284,6 +300,12 @@ public class PlayScreen implements Screen, InputProcessor {
 		while(fallingBlocks.hasNext()) {
 			Block b = fallingBlocks.next();
 			b.update(blocks);
+		}
+		
+		Iterator<Enemy> itEnemies = enemies.iterator();
+		while(itEnemies.hasNext()) {
+			Enemy e = itEnemies.next();
+			e.update(blocks);
 		}
 	}
 
