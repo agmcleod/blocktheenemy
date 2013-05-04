@@ -51,6 +51,19 @@ public class PlayScreen implements Screen, InputProcessor {
 		batch.dispose();
 		spriteSheet.dispose();
 	}
+	
+	public Array<Block> getFallingBlocks() {
+		Iterator<Block> it = blocks.iterator();
+		Array<Block> falling = new Array<Block>();
+		while(it.hasNext()) {
+			Block b = it.next();
+			if(b.isFalling()) {
+				falling.add(b);
+			}
+		}
+		
+		return falling;
+	}
 
 	@Override
 	public void hide() {
@@ -130,8 +143,8 @@ public class PlayScreen implements Screen, InputProcessor {
 
 	@Override
 	public void render(float arg0) {
+		update();
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
-		camera.update();
 		batch.begin();
 		renderBackground();
 		renderBlocks();
@@ -239,7 +252,7 @@ public class PlayScreen implements Screen, InputProcessor {
 		int y = ((int) mousePosition.y / 32) * 32;
 		
 		Vector2 position = new Vector2(x, y);
-		if(!isSpotOccupied(position)) {
+		if(cursor != null && !isSpotOccupied(position)) {
 			switch(keyToType.get(cursor)) {
 			case BRICK:
 				blocks.add(new Brick(blockTextures, position));
@@ -262,6 +275,16 @@ public class PlayScreen implements Screen, InputProcessor {
 	public boolean touchUp(int arg0, int arg1, int arg2, int arg3) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+	
+	public void update() {
+		camera.update();
+		
+		Iterator<Block> fallingBlocks = getFallingBlocks().iterator();
+		while(fallingBlocks.hasNext()) {
+			Block b = fallingBlocks.next();
+			b.update(blocks);
+		}
 	}
 
 }
