@@ -34,8 +34,8 @@ public class Projectile {
 		this.target = target;
 	}
 	
-	public boolean update(Array<Enemy> enemies) {
-		target = enemies.first();
+	public boolean update(Enemy target) {
+		this.target = target;
 		float targetY = position.y;
 		float targetX = Gdx.graphics.getWidth();
 		if(target != null) {

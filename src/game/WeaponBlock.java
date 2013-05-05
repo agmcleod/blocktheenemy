@@ -55,7 +55,8 @@ public class WeaponBlock extends Block {
 		Iterator<Projectile> it = projectiles.iterator();
 		while(it.hasNext()) {
 			Projectile p = it.next();
-			if(p.update(enemies)) {
+			Enemy target = enemies.first();
+			if(p.update(target)) {
 				Enemy e = p.getTarget();
 				if(e != null) {
 					e.takeDamage();

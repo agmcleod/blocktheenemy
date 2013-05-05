@@ -12,12 +12,12 @@ public class Block {
 	
 	private float health;
 	private float maxHealth;
-	private boolean falling = true;
+	private boolean falling;
 	private int maxFallingSpeed = 400;
 	private Vector2 pos;
 	private float stopPos = 32f;
 	private TextureRegion[] textureStates;
-	private int yVelocity = 50;
+	private int yVelocity;
 	
 	static enum Types {
 		BRICK,
@@ -29,6 +29,8 @@ public class Block {
 		this.health = 4;
 		this.maxHealth = 4;
 		this.pos = pos;
+		yVelocity = 50;
+		falling = true;
 	}
 	
 	public Block(TextureRegion[] textureStates, Vector2 pos, int health) {
@@ -36,6 +38,8 @@ public class Block {
 		this.textureStates = textureStates;
 		this.maxHealth = health;
 		this.pos = pos;
+		yVelocity = 50;
+		falling = true;
 	}
 
 	public float getHealth() {
@@ -91,16 +95,21 @@ public class Block {
 			falling = false;
 			pos.y = stopPos;
 		}
-		else {
-			Iterator<Block> it = blocks.iterator();
-			while(it.hasNext()) {
-				Block b = it.next();
-				Vector2 blockPos = b.getPosition();
-				if(!b.isFalling() && blockPos.x == pos.x && (pos.y - blockPos.y) < 64) {
-					stopPos = blockPos.y + 32f;
-				}
+		boolean noNonFallingBlocksBelow = true;
+		for(int i = 0; i < blocks.size; i++) {
+			Block b = blocks.get(i);
+			Vector2 blockPos = b.getPosition();
+			float y = (32 + blockPos.y);
+			if(b != this && !b.isFalling() && blockPos.x == pos.x && y < pos.y && y > stopPos) {
+				stopPos = y;
+				noNonFallingBlocksBelow = false;
 			}
-			moveDown();
+		}
+		if(noNonFallingBlocksBelow) {
+			stopPos = 32;
+		}
+		if(falling) {
+			moveDown();	
 		}
 	}
 }

@@ -59,19 +59,6 @@ public class PlayScreen implements Screen, InputProcessor {
 		batch.dispose();
 		spriteSheet.dispose();
 	}
-	
-	public Array<Block> getFallingBlocks() {
-		Iterator<Block> it = blocks.iterator();
-		Array<Block> falling = new Array<Block>();
-		while(it.hasNext()) {
-			Block b = it.next();
-			if(b.isFalling()) {
-				falling.add(b);
-			}
-		}
-		
-		return falling;
-	}
 
 	@Override
 	public void hide() {
