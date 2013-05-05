@@ -100,7 +100,7 @@ public class Block {
 			Block b = blocks.get(i);
 			Vector2 blockPos = b.getPosition();
 			float y = (32 + blockPos.y);
-			if(b != this && !b.isFalling() && blockPos.x == pos.x && y < pos.y && y > stopPos) {
+			if(b != this && !b.isFalling() && blockPos.x == pos.x && (pos.y - y) < 32 && (pos.y - y) >= 0) {
 				stopPos = y;
 				noNonFallingBlocksBelow = false;
 			}
