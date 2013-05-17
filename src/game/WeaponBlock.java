@@ -12,6 +12,7 @@ public class WeaponBlock extends Block {
 	
 	private TextureRegion arrow;
 	private final float ATTACK_RATE = 1;
+	static final int COST = 7;
 	private float attackTimer;
 	private Array<Projectile> projectiles;
 	

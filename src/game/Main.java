@@ -6,7 +6,9 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 
 public class Main extends Game {
 	
-	private PlayScreen playScreen;
+	EndScreen endScreen;
+	PlayScreen playScreen;
+	StartScreen startScreen;
 	
 	public static void main(String[] args) {
 		LwjglApplicationConfiguration cfg = new LwjglApplicationConfiguration();
@@ -18,6 +20,8 @@ public class Main extends Game {
 	@Override
 	public void create() {
 		playScreen = new PlayScreen(this);
-		setScreen(playScreen);
+		startScreen = new StartScreen(this);
+		endScreen = new EndScreen(this);
+		setScreen(startScreen);
 	}
 }

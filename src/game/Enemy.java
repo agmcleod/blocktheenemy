@@ -23,7 +23,8 @@ public class Enemy {
 	private boolean moving;
 	private Bone root;
 	private Skeleton skeleton;
-	private float speed;
+	static float speed;
+	static int startHealth = 3;
 	private AnimationState state;
 	
 	public Enemy(Vector2 pos) {
@@ -41,7 +42,7 @@ public class Enemy {
 		speed = 20;
 		moving = true;
 		attackSpot = new Vector2();
-		setHealth(2);
+		setHealth(startHealth);
 	}
 	
 	public static void dispose() {
@@ -63,6 +64,10 @@ public class Enemy {
 		return new Enemy(new Vector2(800, 50));
 	}
 	
+	public static Enemy spawn(int xPadding) {
+		return new Enemy(new Vector2(800 + xPadding, 50));
+	}
+	
 	public void render(SkeletonRenderer renderer, SpriteBatch batch) {
 		state.apply(skeleton);
 		renderer.draw(batch, skeleton);
@@ -72,10 +77,6 @@ public class Enemy {
 		state.update(Gdx.graphics.getDeltaTime());
 		skeleton.update(Gdx.graphics.getDeltaTime());
 		skeleton.updateWorldTransform();
-		
-		/* if(!moving && state.isComplete()) {
-			state.setAnimation("Attack", false);
-		} */
 		
 		float x = root.getX();
 		

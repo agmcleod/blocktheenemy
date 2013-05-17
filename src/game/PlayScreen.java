@@ -15,6 +15,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
@@ -33,10 +34,12 @@ public class PlayScreen implements Screen, InputProcessor {
 	private Array<Block> blocks;
 	private TextureRegion[] blockTextures;
 	private OrthographicCamera camera;
+	private int coin;
 	private Integer cursor;
 	private boolean drawBlock = false;
 	private Cursor emptyCursor;
 	private Array<Enemy> enemies;
+	private BitmapFont font;
 	private ObjectMap<Integer, TextureRegion> keyMappings;
 	private ObjectMap<Integer, Block.Types> keyToType;
 	private TextureRegion[] groundTiles;
@@ -44,6 +47,7 @@ public class PlayScreen implements Screen, InputProcessor {
 	private boolean newRound;
 	private Vector3 mousePosition;
 	private SkeletonRenderer renderer;
+	private int roundCounter = 1;
 	private int spawnAmount = 10;
 	private float spawnTimer = 0;
 	
@@ -58,6 +62,7 @@ public class PlayScreen implements Screen, InputProcessor {
 	public void dispose() {
 		batch.dispose();
 		spriteSheet.dispose();
+		font.dispose();
 	}
 
 	@Override
@@ -144,8 +149,23 @@ public class PlayScreen implements Screen, InputProcessor {
 	}
 	
 	public void newRound() {
-		newRound = true;
-		spawnTimer = 0;
+		if(roundCounter >= 12) {
+			main.setScreen(main.endScreen);
+		}
+		else {
+			newRound = true;
+			spawnTimer = 0;
+			spawnAmount += 5;
+			for(int i = 0; i < spawnAmount; i++) {
+				enemies.add(Enemy.spawn(i * 30));
+			}
+			
+			coin += 5;
+			Enemy.speed += 15;
+			roundCounter++;
+			if(spawnAmount % 10 == 0)
+				Enemy.startHealth += 1;
+		}
 	}
 
 	@Override
@@ -161,18 +181,11 @@ public class PlayScreen implements Screen, InputProcessor {
 		batch.begin();
 		renderBackground();
 		renderBlocks();
-		try {
-			if(drawBlock) {
-				setCursor(false);
-				batch.draw(keyMappings.get(cursor), ((int) mousePosition.x / 32) * 32, ((int) mousePosition.y / 32) * 32);
-			}
-			else {
-				setCursor(true);
-			}
-		}
-		catch(LWJGLException e) {
-			System.err.println(e.getMessage());
-		}
+		renderCursor();
+		
+		font.draw(batch, "Coin: $" + coin, 20, Gdx.graphics.getHeight() - 20);
+		font.draw(batch, "Round "+ roundCounter +" / 12", 20, Gdx.graphics.getHeight() - 50);
+		
 		Iterator<Enemy> itEnemies = enemies.iterator();
 		while(itEnemies.hasNext()) {
 			Enemy e = itEnemies.next();
@@ -211,6 +224,32 @@ public class PlayScreen implements Screen, InputProcessor {
 		while(it.hasNext()) {
 			Block b = it.next();
 			b.render(batch);
+		}
+	}
+	
+	public void renderCursor() {
+		try {
+			if(drawBlock) {
+				setCursor(false);
+				batch.draw(keyMappings.get(cursor), ((int) mousePosition.x / 32) * 32, ((int) mousePosition.y / 32) * 32);
+				switch(keyToType.get(cursor)) {
+				case BRICK:
+					font.draw(batch, "Cost: $" + Brick.COST, 600, Gdx.graphics.getHeight() - 20);
+					break;
+				case WEAPON:
+					font.draw(batch, "Cost: $" + WeaponBlock.COST, 600, Gdx.graphics.getHeight() - 20);
+					break;
+				default:
+					break;
+					
+				}
+			}
+			else {
+				setCursor(true);
+			}
+		}
+		catch(LWJGLException e) {
+			System.err.println(e.getMessage());
 		}
 	}
 
@@ -256,18 +295,14 @@ public class PlayScreen implements Screen, InputProcessor {
 		blocks = new Array<Block>();
 		renderer = new SkeletonRenderer();
 		enemies = new Array<Enemy>();
-		newRound();
-	}
-	
-	public void spawnViaDelay() {
-		spawnTimer += Gdx.graphics.getDeltaTime();
-		if(spawnTimer > 0.5f) {
-			spawnTimer = 0;
-			enemies.add(Enemy.spawn());
+		newRound = true;
+		spawnTimer = 0;
+		for(int i = 0; i < spawnAmount; i++) {
+			enemies.add(Enemy.spawn(i * 30));
 		}
-		if(enemies.size >= spawnAmount) {
-			newRound = false;
-		}
+		
+		font = new BitmapFont(Gdx.files.internal("assets/xolo24.fnt"), Gdx.files.internal("assets/xolo24.png"), false);
+		coin = 10;
 	}
 
 	@Override
@@ -279,10 +314,17 @@ public class PlayScreen implements Screen, InputProcessor {
 		if(cursor != null && !isSpotOccupied(position)) {
 			switch(keyToType.get(cursor)) {
 			case BRICK:
-				blocks.add(new Brick(blockTextures, position));
+				if(coin >= Brick.COST) {
+					blocks.add(new Brick(blockTextures, position));
+					coin -= Brick.COST;
+				}
 				break;
 			case WEAPON:
-				blocks.add(new WeaponBlock(weaponTextures, position, arrow));
+				if(coin >= WeaponBlock.COST) {
+					blocks.add(new WeaponBlock(weaponTextures, position, arrow));
+					coin -= WeaponBlock.COST;
+				}
+				break;
 			default:
 				break;
 				
@@ -305,9 +347,6 @@ public class PlayScreen implements Screen, InputProcessor {
 	
 	public void update() {
 		camera.update();
-		if(newRound) {
-			spawnViaDelay();
-		}
 		Iterator<Block> it = blocks.iterator();
 		while(it.hasNext()) {
 			Block b = it.next();
@@ -328,8 +367,12 @@ public class PlayScreen implements Screen, InputProcessor {
 				itEnemies.remove();
 			}
 			if(enemies.size == 0) {
-				spawnAmount += 5;
 				newRound();
+			}
+			// loss condition
+			if(e.getRoot().getX() <= 0) {
+				main.endScreen.result = false;
+				main.setScreen(main.endScreen);
 			}
 		}
 	}
